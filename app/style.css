@@ -27,9 +27,15 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 h2 { font-size: 20px; letter-spacing: .02em; }
 button, input, select { font: inherit; color: inherit; }
 
-/* Sticky header: brand + live progress, always in view. */
-.topbar {
+/* Sticky header stack: brand + progress and the tracker controls stay in
+   view while scrolling the 55 trophies, so filters, export and import are
+   always one click away. Opaque, so scrolled content never shows through. */
+.sticky-stack {
   position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+}
+/* Header: brand + live progress. */
+.topbar {
   display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between;
   padding: 12px 22px;
   background: #0b0d12;
@@ -50,7 +56,7 @@ button, input, select { font: inherit; color: inherit; }
 /* Controls row. */
 .controls {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-  padding: 14px 22px; margin: 0 auto; max-width: 1080px;
+  padding: 10px 22px; margin: 0 auto; max-width: 1080px;
 }
 .controls input[type="search"] {
   flex: 1 1 200px; max-width: 280px;
@@ -84,30 +90,34 @@ button, input, select { font: inherit; color: inherit; }
 main { max-width: 1080px; margin: 0 auto; padding: 18px 22px 40px; }
 
 /* Roadmap. */
-.roadmap { margin-bottom: 26px; scroll-margin-top: 96px; }
-.roadmap-intro { color: var(--muted); max-width: 78ch; }
-.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.roadmap { margin-bottom: 26px; scroll-margin-top: 196px; }
+.roadmap-intro { color: var(--muted); max-width: 78ch; margin: 8px 0 0; }
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
 .stage {
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  padding: 14px 16px;
+  padding: 8px 16px;
 }
 .stage h3 { font-size: 16px; }
 .stage h3 .step { color: var(--pink); margin-right: 6px; }
-.stage .hours { color: var(--gold); font-size: 13px; font-weight: 600; margin: 2px 0 8px; }
-.stage p { margin: 6px 0; color: var(--muted); font-size: 14px; }
-.stage .trophy-note { color: var(--text); font-size: 13px; border-top: 1px solid var(--line); padding-top: 8px; }
-.roadmap-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+.stage .hours { color: var(--gold); font-size: 13px; font-weight: 600; margin: 2px 0 6px; }
+.stage p { margin: 2px 0; color: var(--muted); font-size: 14px; }
+.stage .trophy-note { color: var(--text); font-size: 13px; border-top: 1px solid var(--line); padding-top: 6px; }
+.roadmap-note { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
 /* Trophy list. */
-.list { scroll-margin-top: 96px; }
+.list { scroll-margin-top: 196px; }
 .list-head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
 .list-head p { color: var(--muted); font-size: 13px; margin: 0; }
 #cards { display: grid; gap: 10px; margin-top: 12px; }
 .card {
   display: flex; gap: 14px; align-items: flex-start;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  padding: 14px 16px;
-  scroll-margin-top: 96px;
+  padding: 12px 16px;
+  /* Clears the sticky header stack (76px topbar + ~109px controls) plus the
+     "All trophies" heading above the first card, so a jumped-to card never
+     hides its section heading behind the sticky bar — and the card above
+     it stays fully behind the bar too, instead of peeking its toggle out. */
+  scroll-margin-top: 230px;
 }
 .card.earned { border-color: #2f6b4d; background: #121a16; }
 .card.missable-card { border-left: 4px solid var(--red); }

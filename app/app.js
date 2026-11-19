@@ -116,5 +116,13 @@ if (params.get('view') === 'roadmap') {
 } else if (params.get('view') === 'list') {
   document.querySelector('.list').scrollIntoView();
 } else if (openId) {
-  document.getElementById(`trophy-${openId}`)?.scrollIntoView({ block: 'start' });
+  const el = document.getElementById(`trophy-${openId}`);
+  el?.scrollIntoView({ block: 'start' });
+  // When the opened card is not the first one shown, tuck the scroll a
+  // little further: otherwise the card above it stays half-visible under
+  // the sticky bar, its guide toggle peeking out with no card around it.
+  // (When it is the first card, no tuck: its section heading above it
+  // must stay visible below the bar.)
+  const firstVisible = visibleTrophies(trophies, state)[0];
+  if (el && firstVisible && firstVisible.id !== openId) window.scrollBy(0, 28);
 }
