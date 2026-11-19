@@ -122,7 +122,9 @@ if (params.get('view') === 'roadmap') {
   // little further: otherwise the card above it stays half-visible under
   // the sticky bar, its guide toggle peeking out with no card around it.
   // (When it is the first card, no tuck: its section heading above it
-  // must stay visible below the bar.)
+  // must stay visible below the bar.) The tuck is 42px because the card's
+  // scroll-margin-top is 244px and the sticky bar is ~193px tall: 244 - 42
+  // puts the opened card at ~202px and the card above fully behind the bar.
   const firstVisible = visibleTrophies(trophies, state)[0];
-  if (el && firstVisible && firstVisible.id !== openId) window.scrollBy(0, 28);
+  if (el && firstVisible && firstVisible.id !== openId) window.scrollBy(0, 42);
 }
