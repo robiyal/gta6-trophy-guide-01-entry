@@ -1,52 +1,120 @@
-// A plain checklist of the 55 trophies: tick one off and it stays ticked (localStorage); export and import the ticks.
-const KEY = 'gta6-trophy-checklist';
-const rows = document.getElementById('rows');
-const grade = document.getElementById('grade');
-let earned = new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]'));
-const doc = await (await fetch('data/trophies.json')).json();
+// Leonida Trophy Guide — bootstrap: loads the trophy and roadmap data, reads
+// deep-link parameters, wires the controls and renders the tracker.
+import { KIND_FILTERS, visibleTrophies } from './filters.js';
+import { renderCards, renderProgress } from './render.js';
+import { renderRoadmap } from './roadmap.js';
+import {
+  loadEarned, saveEarned, loadSpoilersHidden, saveSpoilersHidden,
+  downloadProgress, parseProgressFile,
+} from './tracker.js';
 
-function save() {
-  localStorage.setItem(KEY, JSON.stringify([...earned]));
+const data = await (await fetch('data/trophies.json')).json();
+const roadmapData = await (await fetch('data/roadmap.json')).json();
+const trophies = [...data.trophies].sort((a, b) => a.id - b.id);
+const sourceMap = data.sources;
+
+const params = new URLSearchParams(location.search);
+const state = {
+  earned: loadEarned(),
+  spoilersHidden: params.get('spoilers') === 'off' ? false : params.get('spoilers') === 'on' ? true : loadSpoilersHidden(),
+  kind: params.get('filter') ?? 'all',
+  grade: params.get('grade') ?? 'all',
+  earnedOnly: params.get('earned') === '1',
+  query: (params.get('q') ?? '').toLowerCase().trim(),
+};
+const openId = params.get('open') ? Number(params.get('open')) : null;
+
+const cardsEl = document.getElementById('cards');
+const searchEl = document.getElementById('search');
+const gradeEl = document.getElementById('gradeFilter');
+const earnedOnlyEl = document.getElementById('earnedOnly');
+const spoilerEl = document.getElementById('spoilerToggle');
+
+function renderAll() {
+  renderProgress(trophies, state.earned);
+  renderCards(cardsEl, visibleTrophies(trophies, state), state, sourceMap, onToggleEarned, openId);
 }
 
-function render() {
-  rows.replaceChildren();
-  for (const t of doc.trophies) {
-    if (grade.value !== 'all' && t.grade !== grade.value) continue;
-    const tr = document.createElement('tr');
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.checked = earned.has(t.name);
-    box.addEventListener('change', () => {
-      if (box.checked) earned.add(t.name);
-      else earned.delete(t.name);
-      save();
-      render();
-    });
-    const cells = [box, `${t.name}\n${t.description}`, t.grade, t.guide];
-    for (const c of cells) {
-      const td = document.createElement('td');
-      if (typeof c === 'string') td.textContent = c;
-      else td.append(c);
-      tr.append(td);
-    }
-    rows.append(tr);
-  }
-  document.getElementById('progress').textContent = `${earned.size} of ${doc.trophies.length} earned`;
+function onToggleEarned(id, checked) {
+  if (checked) state.earned.add(id);
+  else state.earned.delete(id);
+  saveEarned(state.earned);
+  renderAll();
 }
 
-document.getElementById('export').addEventListener('click', () => {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify([...earned])], { type: 'application/json' }));
-  a.download = 'trophy-progress.json';
-  a.click();
+// Kind filter chips.
+const chipsEl = document.getElementById('kindChips');
+for (const [value, label] of KIND_FILTERS) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip';
+  chip.textContent = label;
+  chip.setAttribute('aria-pressed', String(state.kind === value));
+  chip.addEventListener('click', () => {
+    state.kind = value;
+    for (const c of chipsEl.children) c.setAttribute('aria-pressed', String(c === chip));
+    renderAll();
+  });
+  chipsEl.append(chip);
+}
+
+searchEl.value = state.query;
+searchEl.addEventListener('input', () => {
+  state.query = searchEl.value.toLowerCase().trim();
+  renderAll();
 });
-document.getElementById('import').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+gradeEl.value = state.grade;
+gradeEl.addEventListener('change', () => {
+  state.grade = gradeEl.value;
+  renderAll();
+});
+earnedOnlyEl.checked = state.earnedOnly;
+earnedOnlyEl.addEventListener('change', () => {
+  state.earnedOnly = earnedOnlyEl.checked;
+  renderAll();
+});
+spoilerEl.checked = state.spoilersHidden;
+spoilerEl.addEventListener('change', () => {
+  state.spoilersHidden = spoilerEl.checked;
+  saveSpoilersHidden(state.spoilersHidden);
+  renderAll();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => downloadProgress(state.earned));
+document.getElementById('importFile').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
   if (!file) return;
-  earned = new Set(JSON.parse(await file.text()));
-  save();
-  render();
+  try {
+    const next = parseProgressFile(await file.text(), new Set(trophies.map((t) => t.id)));
+    state.earned = next;
+    saveEarned(state.earned);
+    renderAll();
+  } catch {
+    alert('That file is not a trophy-progress export from this guide.');
+  }
+  event.target.value = '';
 });
-grade.addEventListener('change', render);
-render();
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('Clear all earned ticks?')) return;
+  state.earned = new Set();
+  saveEarned(state.earned);
+  renderAll();
+});
+
+renderRoadmap(
+  document.getElementById('roadmap'),
+  document.getElementById('roadmapIntro'),
+  document.getElementById('roadmapNote'),
+  document.getElementById('roadmapStages'),
+  roadmapData,
+  trophies,
+);
+renderAll();
+
+if (params.get('view') === 'roadmap') {
+  document.getElementById('roadmap').scrollIntoView();
+} else if (params.get('view') === 'list') {
+  document.querySelector('.list').scrollIntoView();
+} else if (openId) {
+  document.getElementById(`trophy-${openId}`)?.scrollIntoView({ block: 'start' });
+}

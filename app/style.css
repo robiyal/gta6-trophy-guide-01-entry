@@ -1,7 +1,165 @@
-body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
-header { display: flex; justify-content: space-between; align-items: baseline; }
-.controls { display: flex; gap: 16px; margin: 12px 0; align-items: center; }
-.import input { font-size: 12px; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; white-space: pre-line; }
-th { background: #f2f2f2; }
+/* Leonida Trophy Guide — dark, neon-Vice look of its own. System fonts only: no webfont, no network. */
+:root {
+  --bg: #0b0d12;
+  --panel: #14171f;
+  --panel-2: #1a1e29;
+  --line: #262c3a;
+  --text: #e9ebf1;
+  --muted: #9aa3b5;
+  --pink: #ff2e7e;
+  --pink-dim: #ff7ab0;
+  --gold: #f2c14e;
+  --platinum: #e8ecf5;
+  --silver: #c3ccd8;
+  --bronze: #d08a4e;
+  --green: #3ecf8e;
+  --red: #ff5c5c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+a { color: var(--pink-dim); }
+h1, h2, h3 { margin: 0; line-height: 1.25; }
+h2 { font-size: 20px; letter-spacing: .02em; }
+button, input, select { font: inherit; color: inherit; }
+
+/* Sticky header: brand + live progress, always in view. */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between;
+  padding: 12px 22px;
+  background: #0b0d12;
+  border-bottom: 2px solid var(--pink);
+}
+.brand { display: flex; gap: 12px; align-items: center; }
+.cup { width: 40px; height: 40px; fill: var(--gold); flex: none; }
+.brand h1 { font-size: 22px; letter-spacing: .03em; text-transform: uppercase; }
+.brand h1::after { content: " VI"; color: var(--pink); }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.progress { min-width: 280px; flex: 1; max-width: 520px; }
+.progress-line { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+.progress-line strong { font-size: 18px; color: var(--gold); }
+.grade-counts { color: var(--muted); font-size: 12px; margin-left: auto; }
+.progress-bar { height: 8px; margin-top: 6px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+.progress-bar div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pink), var(--gold)); transition: width .3s ease; }
+
+/* Controls row. */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 14px 22px; margin: 0 auto; max-width: 1080px;
+}
+.controls input[type="search"] {
+  flex: 1 1 200px; max-width: 280px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; color: var(--text);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 99px;
+  padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--muted);
+}
+.chip[aria-pressed="true"] { background: var(--pink); border-color: var(--pink); color: #fff; font-weight: 600; }
+.ctl { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.ctl select { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; }
+.spacer { flex: 1; }
+.controls button, .import-btn {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; cursor: pointer; font-size: 13px;
+}
+.controls button:hover, .import-btn:hover { border-color: var(--pink); }
+.import-btn input { display: none; }
+.quiet { opacity: .7; }
+
+.missable-banner {
+  max-width: 1080px; margin: 4px auto 0; padding: 10px 22px;
+  color: #ffd9a8; background: #2a1d10; border-top: 1px solid #5a3a17; border-bottom: 1px solid #5a3a17;
+  font-size: 14px;
+}
+.missable-banner strong { color: var(--gold); }
+
+main { max-width: 1080px; margin: 0 auto; padding: 18px 22px 40px; }
+
+/* Roadmap. */
+.roadmap { margin-bottom: 26px; scroll-margin-top: 96px; }
+.roadmap-intro { color: var(--muted); max-width: 78ch; }
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.stage {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px;
+}
+.stage h3 { font-size: 16px; }
+.stage h3 .step { color: var(--pink); margin-right: 6px; }
+.stage .hours { color: var(--gold); font-size: 13px; font-weight: 600; margin: 2px 0 8px; }
+.stage p { margin: 6px 0; color: var(--muted); font-size: 14px; }
+.stage .trophy-note { color: var(--text); font-size: 13px; border-top: 1px solid var(--line); padding-top: 8px; }
+.roadmap-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+/* Trophy list. */
+.list { scroll-margin-top: 96px; }
+.list-head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+.list-head p { color: var(--muted); font-size: 13px; margin: 0; }
+#cards { display: grid; gap: 10px; margin-top: 12px; }
+.card {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px;
+  scroll-margin-top: 96px;
+}
+.card.earned { border-color: #2f6b4d; background: #121a16; }
+.card.missable-card { border-left: 4px solid var(--red); }
+.check { flex: none; padding-top: 2px; cursor: pointer; }
+.check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.check .box {
+  display: inline-flex; width: 26px; height: 26px; border-radius: 7px;
+  border: 2px solid var(--muted); align-items: center; justify-content: center;
+  font-size: 16px; color: transparent; user-select: none;
+}
+.check input:checked + .box { background: var(--green); border-color: var(--green); color: #06281a; font-weight: 700; }
+.check input:focus-visible + .box { outline: 2px solid var(--pink); outline-offset: 2px; }
+.card-body { flex: 1; min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.card-head h3 { font-size: 16px; }
+.grade-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+}
+.grade-platinum { background: var(--platinum); color: #14171f; }
+.grade-gold { background: var(--gold); color: #241a02; }
+.grade-silver { background: var(--silver); color: #1c212b; }
+.grade-bronze { background: var(--bronze); color: #241505; }
+.tag {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; color: var(--muted); white-space: nowrap;
+}
+.tag.missable { border-color: var(--red); color: var(--red); }
+.tag.hidden-tag { border-color: #6b5ce7; color: #b3a8ff; }
+.tag.count { border-color: #2f6b4d; color: var(--green); }
+.tag.kind-tag { border-color: var(--pink); color: var(--pink-dim); }
+.desc { margin: 6px 0 0; color: var(--muted); font-style: italic; }
+.card.spoiled .desc { color: var(--muted); }
+.guide-toggle {
+  margin-top: 10px; background: none; border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--text);
+}
+.guide-toggle:hover { border-color: var(--pink); }
+.guide { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.guide p { margin: 6px 0; font-size: 14px; }
+.guide .missable-note { color: #ffd9a8; background: #2a1d10; border: 1px solid #5a3a17; border-radius: 8px; padding: 8px 10px; }
+.guide .sources { font-size: 13px; color: var(--muted); }
+.guide .sources a { margin-right: 10px; }
+.guide .unconfirmed { color: var(--gold); font-weight: 600; }
+.empty-note { color: var(--muted); }
+footer { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 13px; }
+footer p { max-width: 78ch; }
+.sources-line { font-size: 12px; }
+
+@media (max-width: 760px) {
+  .stages { grid-template-columns: 1fr; }
+  .brand h1 { font-size: 18px; }
+  .progress { min-width: 0; }
+  .card { padding: 12px; }
+}
